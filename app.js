@@ -130,6 +130,23 @@ function playThrowSheepSound() {
     osc2.stop(now + 0.28);
 }
 
+// Sonido: Lanzar Chupete Sónico (Pérdida de frecuencia retro aguda y graciosa)
+function playThrowPacifierSound() {
+    initAudio();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(150, now + 0.2);
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.2);
+}
+
 // Sonido: Impacto / Daño (Golpe de ruido explosivo de 8 bits)
 function playHitSound() {
     initAudio();
@@ -223,6 +240,15 @@ const fightersData = {
         intelligenceValue: 1,
         weaponText: "LANZA OVEJITAS (DESDE SU MOCHILA)",
         bio: "Comunista de trinchera y militante de sillón. Pasa la semana despotricando contra el gobierno de derecha y soñando con volver al periodo de Boric. Ama el grindcore ruidoso, pero prefiere escucharlo en pijama antes que ir a un concierto."
+    },
+    diego: {
+        name: "DIEGO STEELE",
+        portrait: "assets/diego_portrait.png",
+        fullbody: "assets/diego_side_transparent.png",
+        intelligenceText: "Media 5/10 neuronas",
+        intelligenceValue: 5,
+        weaponText: "CHUPETES SÓNICOS Y MAZO GLAM",
+        bio: "El menor del grupo, cariñosamente apodado 'La Guagua'. Fanático empedernido del Glam Rock de los 80, pasa el día peinándose el copete y maquillándose. Es el hijo adoptivo no oficial de Chananeitor (su 'padre' por broma de edad), quien intenta educarlo en las artes del metal pesado sin mucho éxito."
     }
 };
 
@@ -230,6 +256,7 @@ const fightersData = {
 // --- MOTOR DE JUEGO Y LÓGICA DE COMBATE ---
 let credits = 0;
 let activeFighterId = "chananeitor";
+let activeOpponentId = "marcos";
 
 // Variables del juego
 let canvas = null;
@@ -279,7 +306,7 @@ function createFighter(id, side, isPlayer) {
         direction: side === 'left' ? 1 : -1,
         attackCooldown: 0,
         flashTimer: 0,
-        shieldColor: id === 'chananeitor' ? 'rgba(0, 255, 255, 0.4)' : 'rgba(0, 255, 102, 0.4)'
+        shieldColor: id === 'chananeitor' ? 'rgba(0, 255, 255, 0.4)' : (id === 'diego' ? 'rgba(255, 0, 150, 0.4)' : 'rgba(0, 255, 102, 0.4)')
     };
 }
 
@@ -307,19 +334,9 @@ function startFight() {
     gameTimer = 99;
     document.getElementById("hud-timer-text").textContent = gameTimer;
 
-    // Determinar oponente aleatorio
-    const keysArray = Object.keys(fightersData);
-    let opponentId = activeFighterId;
-    
-    // Si tenemos múltiples opciones, elegimos una diferente, sino la misma (espejo)
-    if (keysArray.length > 1) {
-        const filtered = keysArray.filter(k => k !== activeFighterId);
-        opponentId = filtered[Math.floor(Math.random() * filtered.length)];
-    }
-
     // Crear luchadores
     p1 = createFighter(activeFighterId, 'left', true);
-    p2 = createFighter(opponentId, 'right', false);
+    p2 = createFighter(activeOpponentId, 'right', false);
 
     // Actualizar HUD inicial
     document.getElementById("hud-p1-name").textContent = p1.name;
@@ -433,6 +450,9 @@ function updateAI() {
             if (p2.id === 'chananeitor') {
                 projType = 'bottle';
                 playThrowBottleSound();
+            } else if (p2.id === 'diego') {
+                projType = 'pacifier';
+                playThrowPacifierSound();
             } else {
                 playThrowSheepSound();
             }
@@ -576,7 +596,13 @@ function gameLoop() {
                     document.getElementById("hud-p2-health").style.width = healthPct + "%";
                 }
 
-                createSparks(proj.x + proj.width / 2, proj.y + proj.height / 2, target.id === 'chananeitor' ? '#ff3300' : '#ffff00');
+                let sparkColor = '#ffff00';
+                if (target.id === 'chananeitor') {
+                    sparkColor = '#ff3300';
+                } else if (target.id === 'diego') {
+                    sparkColor = '#ff00ff';
+                }
+                createSparks(proj.x + proj.width / 2, proj.y + proj.height / 2, sparkColor);
 
                 // Comprobar fin de partida
                 if (target.health <= 0) {
@@ -623,6 +649,27 @@ function gameLoop() {
             ctx.fillRect(proj.x, proj.y + 12, 20, 28);
             ctx.fillStyle = '#00ff66';
             ctx.fillRect(proj.x + 6, proj.y, 8, 12);
+        } else if (proj.type === 'pacifier') {
+            // Dibujar chupete sónico de glam rock (círculo rosa, boquilla blanca/amarilla y anillo cian)
+            const cx = proj.x + 20;
+            const cy = proj.y + 20;
+            
+            // 1. Anillo/Mango del chupete (Cian)
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(cx - 10, cy, 8, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 2. Base del chupete (Rosa Glam)
+            ctx.fillStyle = '#ff00aa';
+            ctx.fillRect(cx - 4, cy - 12, 6, 24);
+            
+            // 3. Bulbo/Tetina (Amarillo brillante)
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(cx + 8, cy, 9, 0, Math.PI * 2);
+            ctx.fill();
         } else {
             // Dibujar ovejita grande y esponjosa con alta definición pixel art
             const centerX = proj.x + 20;
@@ -707,7 +754,7 @@ function gameLoop() {
         // Dibujar escudo neón si bloquea (Radio ampliado de 60 a 85 por mayor tamaño de personajes)
         if (f.isBlocking) {
             ctx.save();
-            ctx.strokeStyle = f.id === 'chananeitor' ? '#00ffff' : '#00ff66';
+            ctx.strokeStyle = f.id === 'chananeitor' ? '#00ffff' : (f.id === 'diego' ? '#ff00ff' : '#00ff66');
             ctx.lineWidth = 4;
             ctx.fillStyle = f.shieldColor;
             ctx.beginPath();
@@ -768,11 +815,13 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Elegir rival
             const keysArray = Object.keys(fightersData);
-            let opponentId = activeFighterId;
             if (keysArray.length > 1) {
-                opponentId = keysArray.find(k => k !== activeFighterId);
+                const filtered = keysArray.filter(k => k !== activeFighterId);
+                activeOpponentId = filtered[Math.floor(Math.random() * filtered.length)];
+            } else {
+                activeOpponentId = activeFighterId;
             }
-            const p2Data = fightersData[opponentId];
+            const p2Data = fightersData[activeOpponentId];
 
             document.getElementById("vs-p1-img").src = p1Data.portrait;
             document.getElementById("vs-p1-name").textContent = p1Data.name;
@@ -872,6 +921,9 @@ document.addEventListener("DOMContentLoaded", () => {
             let projType = 'bottle';
             if (p1.id === 'chananeitor') {
                 playThrowBottleSound();
+            } else if (p1.id === 'diego') {
+                projType = 'pacifier';
+                playThrowPacifierSound();
             } else {
                 projType = 'sheep';
                 playThrowSheepSound();
