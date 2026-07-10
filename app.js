@@ -250,8 +250,6 @@ let p1 = null;
 let p2 = null;
 let projectiles = [];
 let particles = [];
-let crowd = [];
-let stageLightTimer = 0;
 
 // Teclado
 const keys = {};
@@ -301,243 +299,11 @@ function createSparks(x, y, color) {
     }
 }
 
-// --- SISTEMA DEL PÚBLICO (CROWD) RETRO Y METALERO ---
-function initCrowd() {
-    crowd = [];
-    const numMembers = 22;
-    for (let i = 0; i < numMembers; i++) {
-        // Alternamos entre fondo y frente
-        const isBg = i % 2 === 0;
-        
-        // Distribuir a lo largo de la pantalla
-        const x = (i / numMembers) * 800 + Math.random() * 30 + 20;
-        
-        // El público del fondo está más arriba, el del frente más abajo
-        const y = isBg ? 320 + Math.random() * 15 : 395 + Math.random() * 15;
-        
-        // Escala para simular perspectiva
-        const scale = isBg ? 0.75 + Math.random() * 0.15 : 1.1 + Math.random() * 0.15;
-        
-        const styles = ['longhair', 'mohawk', 'bald', 'spiky'];
-        const style = styles[Math.floor(Math.random() * styles.length)];
-        
-        crowd.push({
-            x: x,
-            y: y,
-            isBackground: isBg,
-            scale: scale,
-            style: style,
-            phase: Math.random() * Math.PI * 2,
-            speed: 0.08 + Math.random() * 0.1,
-            headbangAmplitude: isBg ? 4 + Math.random() * 4 : 8 + Math.random() * 6,
-            handsUp: false,
-            handsUpTimer: 0,
-            handChoice: Math.random() < 0.35 ? 'left' : (Math.random() < 0.55 ? 'right' : 'both'),
-            excitement: 0
-        });
-    }
-}
-
-function updateCrowd() {
-    for (let member of crowd) {
-        // Decaimiento del entusiasmo/excitación
-        if (member.excitement > 0) {
-            member.excitement -= 0.015;
-            if (member.excitement < 0) member.excitement = 0;
-        }
-
-        // Oscilación del headbanging (se acelera con el entusiasmo)
-        const currentSpeed = member.speed + member.excitement * 0.12;
-        member.phase += currentSpeed;
-        
-        // Levantar las manos aleatoriamente (mayor probabilidad si está entusiasmado)
-        const handsUpProb = member.excitement > 0.3 ? 0.04 : 0.005;
-        if (!member.handsUp) {
-            if (Math.random() < handsUpProb) {
-                member.handsUp = true;
-                member.handsUpTimer = member.excitement > 0.3
-                    ? 20 + Math.floor(Math.random() * 40)
-                    : 40 + Math.floor(Math.random() * 80);
-            }
-        } else {
-            member.handsUpTimer--;
-            if (member.handsUpTimer <= 0) {
-                member.handsUp = false;
-            }
-        }
-    }
-}
-
-function exciteCrowd(amount) {
-    for (let member of crowd) {
-        member.excitement = Math.min(1.0, member.excitement + amount);
-    }
-}
-
-function drawCrowd(isBg) {
-    // Definir colores basados en las luces del escenario que cambian sutilmente
-    const r = Math.sin(stageLightTimer) * 35 + 45;
-    const g = Math.cos(stageLightTimer * 0.8) * 20 + 25;
-    const b = Math.sin(stageLightTimer * 1.2) * 45 + 65;
-
-    // Colores oscuros de silueta que cambian con la luz
-    const baseColor = isBg 
-        ? `rgba(${Math.floor(r * 0.25)}, ${Math.floor(g * 0.25)}, ${Math.floor(b * 0.25)}, 0.95)`
-        : `rgba(${Math.floor(r * 0.4)}, ${Math.floor(g * 0.4)}, ${Math.floor(b * 0.4)}, 0.95)`;
-
-    // Brillo del contorno
-    const highlightColor = isBg
-        ? `rgba(${Math.floor(r * 0.9)}, ${Math.floor(g * 0.9)}, ${Math.floor(b * 0.9)}, 0.6)`
-        : `rgba(${Math.floor(r * 1.5)}, ${Math.floor(g * 1.5)}, ${Math.floor(b * 1.5)}, 0.8)`;
-
-    for (let member of crowd) {
-        if (member.isBackground === isBg) {
-            drawCrowdMember(member, baseColor, highlightColor);
-        }
-    }
-}
-
-function drawCrowdMember(member, baseColor, highlightColor) {
-    ctx.save();
-    
-    // Movimiento vertical (bob) del headbanging (más amplio si está excitado)
-    const currentAmp = member.headbangAmplitude + member.excitement * 8;
-    const bob = Math.sin(member.phase) * currentAmp;
-    
-    ctx.translate(member.x, member.y);
-    ctx.scale(member.scale, member.scale);
-    
-    // Silueta
-    ctx.fillStyle = baseColor;
-    ctx.strokeStyle = highlightColor;
-    ctx.lineWidth = 1.5;
-    
-    // 1. Dibujar hombros y cuerpo
-    ctx.beginPath();
-    ctx.moveTo(-22, 25);
-    ctx.bezierCurveTo(-18, 5, -12, 4, -8, 6);
-    ctx.lineTo(8, 6);
-    ctx.bezierCurveTo(12, 4, 18, 5, 22, 25);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    
-    // 2. Cabeza (que oscila con el headbang)
-    const headY = -4 + bob * 0.5;
-    
-    // Cuello
-    ctx.beginPath();
-    ctx.rect(-4, headY, 8, 8);
-    ctx.fill();
-    ctx.stroke();
-    
-    // Cabeza
-    ctx.beginPath();
-    ctx.arc(0, headY - 8, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    
-    // Cabello / Peinado
-    ctx.beginPath();
-    if (member.style === 'longhair') {
-        const swing = Math.cos(member.phase) * (member.headbangAmplitude * 0.35);
-        
-        // Lado izquierdo del cabello
-        ctx.moveTo(-8, headY - 14);
-        ctx.bezierCurveTo(-12, headY, -12 + swing, headY + 12, -8 + swing, headY + 22);
-        ctx.lineTo(-2 + swing, headY + 22);
-        ctx.lineTo(-3, headY - 3);
-        ctx.closePath();
-        
-        // Lado derecho del cabello
-        ctx.moveTo(8, headY - 14);
-        ctx.bezierCurveTo(12, headY, 12 + swing, headY + 12, 8 + swing, headY + 22);
-        ctx.lineTo(2 + swing, headY + 22);
-        ctx.lineTo(3, headY - 3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-    } else if (member.style === 'mohawk') {
-        // Cresta punk
-        ctx.moveTo(-2, headY - 16);
-        ctx.lineTo(0, headY - 24);
-        ctx.lineTo(2, headY - 16);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-    } else if (member.style === 'spiky') {
-        // Pelo picudo
-        ctx.moveTo(-6, headY - 14);
-        ctx.lineTo(-5, headY - 19);
-        ctx.lineTo(-2, headY - 15);
-        ctx.lineTo(0, headY - 21);
-        ctx.lineTo(2, headY - 15);
-        ctx.lineTo(5, headY - 19);
-        ctx.lineTo(6, headY - 14);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-    }
-    
-    // 3. Brazos levantados (cuernos)
-    if (member.handsUp) {
-        ctx.fillStyle = baseColor;
-        
-        const drawArm = (side) => {
-            const sideMult = side === 'left' ? -1 : 1;
-            const armY = 12;
-            const handX = sideMult * (12 + Math.sin(member.phase * 2) * 2);
-            const handY = -28 + Math.cos(member.phase * 2) * 4;
-            
-            ctx.beginPath();
-            ctx.moveTo(sideMult * 10, armY);
-            ctx.quadraticCurveTo(sideMult * 18, (armY + handY) / 2, handX, handY);
-            ctx.lineTo(handX + sideMult * 3, handY);
-            ctx.quadraticCurveTo(sideMult * 22, (armY + handY) / 2 + 4, sideMult * 16, armY);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            
-            // Mano
-            ctx.beginPath();
-            ctx.arc(handX + sideMult * 1.5, handY, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            
-            // Cuernos 🤘
-            ctx.strokeStyle = highlightColor;
-            ctx.lineWidth = 1;
-            
-            // Índice
-            ctx.beginPath();
-            ctx.moveTo(handX + sideMult * 0.5, handY - 1);
-            ctx.lineTo(handX + sideMult * 0.5, handY - 7);
-            ctx.stroke();
-            
-            // Meñique
-            ctx.beginPath();
-            ctx.moveTo(handX + sideMult * 3, handY - 0.5);
-            ctx.lineTo(handX + sideMult * 3, handY - 6);
-            ctx.stroke();
-        };
-        
-        if (member.handChoice === 'left' || member.handChoice === 'both') {
-            drawArm('left');
-        }
-        if (member.handChoice === 'right' || member.handChoice === 'both') {
-            drawArm('right');
-        }
-    }
-    
-    ctx.restore();
-}
-
 // Inicializar el escenario de pelea
 function startFight() {
     fightActive = true;
     projectiles = [];
     particles = [];
-    initCrowd();
     gameTimer = 99;
     document.getElementById("hud-timer-text").textContent = gameTimer;
 
@@ -661,7 +427,6 @@ function updateAI() {
         // Decisión de atacar
         if (Math.random() < 0.02 && p2.attackCooldown === 0 && !p2.isCrouching) {
             p2.attackCooldown = 50;
-            exciteCrowd(0.2);
             
             // Sonido y proyectil según personaje
             let projType = 'sheep';
@@ -696,15 +461,8 @@ function gameLoop() {
     // Limpiar Canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Actualizar luces de escenario y público
-    stageLightTimer += 0.025;
-    updateCrowd();
-
     // Pintar escenario de fondo
     ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
-
-    // Pintar público de fondo (detrás de los luchadores)
-    drawCrowd(true);
 
     const floorHeight = 230; // Ajustado a la mayor altura de los sprites (pies a 395px)
 
@@ -809,7 +567,6 @@ function gameLoop() {
                 playHitSound();
                 target.health -= 5; // Reducido de 12 para que las partidas duren más
                 target.flashTimer = 8; // Destello de daño
-                exciteCrowd(0.75); // Emocionar al público con el golpe
 
                 // Actualizar barra de vida en el DOM
                 const healthPct = Math.max(0, target.health);
@@ -964,9 +721,6 @@ function gameLoop() {
     drawFighterSprite(p1);
     drawFighterSprite(p2);
 
-    // Pintar público de frente (delante de los luchadores)
-    drawCrowd(false);
-
     // Continuar bucle
     if (fightActive) {
         gameLoopId = requestAnimationFrame(gameLoop);
@@ -1114,7 +868,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Disparo de ataque del jugador
         if (e.code === 'KeyA' && p1.attackCooldown === 0 && !p1.isCrouching && !p1.isBlocking) {
             p1.attackCooldown = 40; // Enfriamiento de ataque
-            exciteCrowd(0.2);
 
             let projType = 'bottle';
             if (p1.id === 'chananeitor') {
