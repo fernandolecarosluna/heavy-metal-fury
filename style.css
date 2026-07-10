@@ -1,0 +1,706 @@
+/* --- SISTEMA DE DISEÑO RETRO ARCADE --- */
+:root {
+    --bg-dark: #0a0a0c;
+    --bg-cabinet: #15151e;
+    --color-primary: #ffcc00;   /* Amarillo clásico Street Fighter */
+    --color-secondary: #00ffff; /* Cian ciberpunk / arcade */
+    --color-accent: #ff0055;    /* Rojo / Rosa de acción */
+    --color-success: #00ff66;   /* Verde neón */
+    --color-text: #ffffff;
+    --font-pixel: 'Press Start 2P', monospace;
+    --font-retro: 'VT323', monospace;
+    --glow-yellow: 0 0 8px rgba(255, 204, 0, 0.5);
+    --glow-cyan: 0 0 8px rgba(0, 255, 255, 0.5);
+    --glow-red: 0 0 10px rgba(255, 0, 85, 0.7);
+    --glow-green: 0 0 8px rgba(0, 255, 102, 0.7);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    image-rendering: pixelated; /* Mantiene la nitidez de las imágenes pixel art */
+}
+
+body {
+    background-color: #030305;
+    background-image: 
+        radial-gradient(circle at 50% 50%, rgba(20, 20, 35, 0.8) 0%, #030305 100%),
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%);
+    background-size: 100% 100%, 100% 4px;
+    color: var(--color-text);
+    font-family: var(--font-pixel);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 10px;
+}
+
+/* --- EFECTO PANTALLA CRT --- */
+.crt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.3) 100%);
+    pointer-events: none;
+    z-index: 999;
+}
+
+.scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.2) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 998;
+    animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+    0% { opacity: 0.98; }
+    50% { opacity: 1; }
+    100% { opacity: 0.99; }
+}
+
+/* Desactivar efectos CRT */
+body.crt-off .crt-overlay,
+body.crt-off .scanlines {
+    display: none;
+}
+
+/* --- GABINETE ARCADE --- */
+.arcade-cabinet {
+    width: 100%;
+    max-width: 900px;
+    height: 95vh;
+    max-height: 800px;
+    background-color: var(--bg-cabinet);
+    border: 6px solid #252535;
+    border-radius: 16px;
+    box-shadow: 
+        0 0 0 8px #0a0a0c,
+        0 15px 40px rgba(0, 0, 0, 0.8),
+        inset 0 0 30px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Cabecera */
+.game-header {
+    background-color: #0c0c12;
+    padding: 10px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-bottom: 4px double #33334d;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.game-logo {
+    max-width: 200px;
+    height: auto;
+    filter: drop-shadow(0 0 6px rgba(255, 100, 0, 0.4));
+    margin-bottom: 4px;
+}
+
+.subtitle-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 500px;
+    font-size: 8px;
+    color: var(--color-secondary);
+    text-shadow: var(--glow-cyan);
+}
+
+.pulse-text {
+    animation: pulse 1.2s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+/* Pantalla de juego principal */
+.arcade-screen {
+    background-color: #050508;
+    padding: 15px 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+}
+
+/* --- CONTENEDOR DE PERFIL (PROPORCIONALMENTE MÁS ESPACIO PARA IMÁGENES) --- */
+.character-profile-container {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr; /* 55% Imágenes (más grande), 45% Textos */
+    gap: 25px;
+    align-items: center;
+    flex-grow: 1;
+}
+
+@media (max-width: 768px) {
+    .character-profile-container {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+}
+
+/* Columna Izquierda: Visuales (Chananeitor más grande) */
+.visual-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.portrait-frame {
+    background-color: #12121c;
+    border: 4px solid var(--color-primary);
+    border-radius: 8px;
+    padding: 5px;
+    box-shadow: var(--glow-yellow);
+    width: 170px; /* Incrementado de 140px */
+    flex-shrink: 0;
+}
+
+.char-portrait {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 2px solid #000;
+}
+
+.sprite-frame {
+    width: 100%;
+    max-width: 250px; /* Incrementado de 220px */
+    height: 170px; /* Incrementado de 140px */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, rgba(0, 255, 255, 0.15) 0%, transparent 75%);
+    border-radius: 50%;
+    animation: floatSprite 3s ease-in-out infinite alternate;
+    position: relative;
+    perspective: 800px; /* Permite rotación 3D realista */
+}
+
+.char-sprite {
+    height: 135%; /* Sobresale bastante del marco neón para verse gigante */
+    width: auto;
+    object-fit: contain;
+    transform-style: preserve-3d;
+    animation: spin3D 8s linear infinite; /* ROTACIÓN 360° SOBRE EJE Y */
+}
+
+/* Animaciones combinadas */
+@keyframes floatSprite {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-8px); }
+}
+
+@keyframes spin3D {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
+}
+
+/* Columna Derecha: Detalles (Más compactos) */
+.details-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    height: 100%;
+}
+
+.char-name {
+    font-size: 20px; /* Ligeramente menor para balancear */
+    color: var(--color-accent);
+    text-shadow: var(--glow-red);
+    letter-spacing: 2px;
+    border-bottom: 4px solid var(--color-accent);
+    padding-bottom: 4px;
+    animation: nameFlicker 2s infinite alternate;
+}
+
+@keyframes nameFlicker {
+    0%, 93%, 98% { text-shadow: var(--glow-red); opacity: 1; }
+    94%, 97% { text-shadow: none; opacity: 0.9; }
+    99%, 100% { text-shadow: var(--glow-red); opacity: 1; }
+}
+
+.stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Más compacto */
+    background-color: rgba(20, 20, 30, 0.6);
+    border: 2px solid #33334d;
+    padding: 10px 12px; /* Más compacto */
+    border-radius: 8px;
+}
+
+.stat-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.stat-label {
+    color: var(--color-primary);
+    font-size: 8px; /* Más pequeño */
+    letter-spacing: 1px;
+    text-shadow: var(--glow-yellow);
+}
+
+.stat-value-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.stat-text {
+    font-family: var(--font-pixel);
+    font-size: 11px; /* Más pequeño */
+    color: var(--color-success);
+    text-shadow: var(--glow-green);
+}
+
+.weapon-text {
+    font-size: 11px; /* Más pequeño */
+    color: #ff9900;
+    text-shadow: 0 0 6px rgba(255, 153, 0, 0.6);
+}
+
+/* Barra de energía / estadísticas */
+.energy-bar {
+    display: flex;
+    gap: 2px;
+    background-color: #222;
+    padding: 2px;
+    border: 2px solid #555;
+    border-radius: 4px;
+    width: 120px; /* Más compacto */
+}
+
+.bar-segment {
+    flex-grow: 1;
+    height: 8px;
+    background-color: #333;
+}
+
+.bar-segment.filled {
+    background-color: var(--color-success);
+    box-shadow: 0 0 4px var(--color-success);
+    animation: barPulse 1.5s infinite alternate;
+}
+
+@keyframes barPulse {
+    0% { filter: brightness(0.8); }
+    100% { filter: brightness(1.2); }
+}
+
+/* Reseña / Historia */
+.bio-row {
+    border-top: 2px dashed #33334d;
+    padding-top: 8px;
+}
+
+.bio-text {
+    font-family: var(--font-retro);
+    font-size: 17px; /* Más pequeño */
+    line-height: 1.25;
+    color: #e0e0f0;
+    text-align: justify;
+}
+
+/* Controles Interactivos */
+.audio-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+}
+
+.retro-btn {
+    background-color: #222230;
+    border: 2px solid #44445c;
+    border-bottom: 3px solid #11111a;
+    color: var(--color-text);
+    padding: 5px 10px;
+    font-family: var(--font-pixel);
+    font-size: 7px; /* Más compacto */
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.1s ease;
+}
+
+.retro-btn:hover {
+    background-color: #333347;
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+    box-shadow: var(--glow-cyan);
+}
+
+.retro-btn:active {
+    border-bottom: 1px solid #11111a;
+    transform: translateY(2px);
+}
+
+.retro-btn.active {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+/* --- GRID DE SELECCIÓN --- */
+.selection-grid-container {
+    border-top: 3px double #33334d;
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.grid-title {
+    font-size: 8px;
+    color: var(--color-primary);
+    text-shadow: var(--glow-yellow);
+    letter-spacing: 2px;
+}
+
+.fighters-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 70px);
+    gap: 8px;
+    justify-content: center;
+}
+
+@media (max-width: 640px) {
+    .fighters-grid {
+        grid-template-columns: repeat(3, 70px);
+    }
+}
+
+.grid-slot {
+    background-color: #101018;
+    border: 2px solid #33334d;
+    border-radius: 4px;
+    aspect-ratio: 1;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+    padding: 2px;
+    transition: all 0.2s ease;
+}
+
+.grid-slot.selected {
+    border-color: var(--color-primary);
+    box-shadow: var(--glow-yellow);
+    animation: selectedPulse 1s infinite alternate;
+}
+
+@keyframes selectedPulse {
+    0% { border-color: var(--color-primary); }
+    100% { border-color: #ff9900; }
+}
+
+.slot-thumb {
+    width: 100%;
+    height: 65%;
+    object-fit: cover;
+    border: 1px solid #222;
+}
+
+.slot-name {
+    font-size: 5px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    color: #ccc;
+}
+
+.grid-slot.selected .slot-name {
+    color: var(--color-primary);
+    font-weight: bold;
+}
+
+/* Ranuras Bloqueadas */
+.grid-slot.locked {
+    cursor: not-allowed;
+    background-color: #08080c;
+}
+
+.slot-lock {
+    height: 70%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    color: #444;
+    font-family: var(--font-retro);
+}
+
+/* Pie de Gabinete */
+.arcade-footer {
+    background-color: #08080c;
+    padding: 6px;
+    text-align: center;
+    font-size: 6px;
+    color: #555;
+    border-top: 3px solid #1a1a24;
+    flex-shrink: 0;
+}
+
+/* --- SISTEMA DE PANTALLAS DE TRANSICIÓN --- */
+.screen {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* --- PANTALLA VERSUS (VS) --- */
+#vs-screen {
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, #1a0a1a 0%, #030305 100%);
+    gap: 20px;
+}
+
+.vs-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    max-width: 700px;
+}
+
+.vs-fighter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 220px;
+}
+
+.vs-portrait-border {
+    border: 6px solid var(--color-primary);
+    border-radius: 12px;
+    padding: 6px;
+    background-color: #0a0a0c;
+    box-shadow: var(--glow-yellow);
+    width: 160px;
+    height: 160px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.vs-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: 3px solid #000;
+}
+
+.vs-name {
+    font-size: 14px;
+    color: var(--color-text);
+    text-shadow: var(--glow-yellow);
+    text-align: center;
+}
+
+.vs-badge {
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 32px;
+    font-family: var(--font-pixel);
+    padding: 10px 15px;
+    border: 4px solid var(--color-text);
+    box-shadow: var(--glow-red);
+    transform: rotate(-10deg);
+    animation: vsShake 0.2s infinite alternate;
+}
+
+@keyframes vsShake {
+    0% { transform: rotate(-8deg) scale(1); }
+    100% { transform: rotate(-12deg) scale(1.05); }
+}
+
+.vs-announcement {
+    font-size: 20px;
+    color: var(--color-secondary);
+    text-shadow: var(--glow-cyan);
+    margin-top: 15px;
+}
+
+/* --- ESCENARIO DE COMBATE (CANVAS & HUD) --- */
+#fight-screen {
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* HUD de barras de vida */
+.fight-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 840px;
+    background-color: rgba(10, 10, 15, 0.9);
+    border: 3px solid #33334d;
+    padding: 6px 12px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    flex-shrink: 0;
+}
+
+.hud-player {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 38%;
+}
+
+.hud-player.player2 {
+    align-items: flex-end;
+}
+
+.hud-name {
+    font-size: 9px;
+    color: var(--color-primary);
+    text-shadow: var(--glow-yellow);
+}
+
+.health-bar-container {
+    background-color: #222;
+    border: 2px solid #555;
+    height: 16px;
+    width: 100%;
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.health-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(to right, #ff0000, #ffcc00, #00ff66);
+    background-size: 100% 100%;
+    box-shadow: 0 0 5px var(--color-success);
+    transition: width 0.1s ease-out;
+}
+
+.hud-timer {
+    font-size: 26px;
+    color: #ff9900;
+    text-shadow: 0 0 8px rgba(255, 153, 0, 0.8);
+    font-weight: bold;
+}
+
+/* Lienzo de juego */
+.canvas-container {
+    width: 100%;
+    max-width: 840px;
+    background-color: #000;
+    border: 4px solid #33334d;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+    border-radius: 4px;
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: 420px;
+    background-color: #111;
+}
+
+.fight-controls-guide {
+    font-size: 7px;
+    color: #889;
+    padding-top: 5px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* --- PANTALLA RESULTADO --- */
+#result-screen {
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(5, 5, 8, 0.95);
+    gap: 30px;
+}
+
+.result-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.result-title {
+    font-size: 32px;
+    color: var(--color-accent);
+    text-shadow: var(--glow-red);
+    letter-spacing: 2px;
+    animation: pulse 0.8s infinite alternate;
+}
+
+.result-subtitle {
+    font-size: 24px;
+    color: var(--color-secondary);
+    text-shadow: var(--glow-cyan);
+    letter-spacing: 4px;
+}
+
+/* Reducir encabezado en combate/versus para optimizar espacio vertical */
+body:has(#fight-screen.active) .game-header,
+body:has(#vs-screen.active) .game-header {
+    padding: 4px 20px;
+}
+
+body:has(#fight-screen.active) .game-logo,
+body:has(#vs-screen.active) .game-logo {
+    max-width: 120px;
+}
+
+

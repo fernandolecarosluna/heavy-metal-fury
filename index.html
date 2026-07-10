@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METAL FIGHTER - Selección de Personajes</title>
+    <!-- Fuentes Retro Pixel Art -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Efecto de Pantalla CRT y Scanlines -->
+    <div class="crt-overlay" id="crt-overlay"></div>
+    <div class="scanlines" id="scanlines"></div>
+
+    <div class="arcade-cabinet">
+        <!-- Cabecera del Juego con Logo -->
+        <header class="game-header">
+            <img src="assets/logo_metal_fighter.png" alt="METAL FIGHTER LOGO" class="game-logo">
+            <div class="subtitle-container">
+                <span class="pulse-text" id="insert-coin-text">PRESS START / INSERT COIN</span>
+                <span class="coin-count" id="credits-count">CREDITS: 00</span>
+            </div>
+        </header>
+
+        <main class="arcade-screen">
+            
+            <!-- PANTALLA 1: SELECCIÓN DE PERSONAJES -->
+            <div class="screen active" id="select-screen">
+                <div class="character-profile-container">
+                    <!-- Columna Izquierda: Galería Visual -->
+                    <div class="visual-panel">
+                        <div class="portrait-frame">
+                            <img src="assets/chananeitor_portrait.png" alt="Chananeitor Carnet" class="char-portrait" id="char-portrait-img">
+                        </div>
+                        <div class="sprite-frame">
+                            <img src="assets/chananeitor_side_transparent.png" alt="Chananeitor Full Body" class="char-sprite" id="char-sprite-img">
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Estadísticas e Historia -->
+                    <div class="details-panel">
+                        <h2 class="char-name" id="char-name-text">CHANANEITOR</h2>
+                        
+                        <div class="stats-container">
+                            <!-- Inteligencia -->
+                            <div class="stat-row">
+                                <span class="stat-label">INTELIGENCIA:</span>
+                                <div class="stat-value-container">
+                                    <span class="stat-text" id="intelligence-text">media/baja 3/10 neuronas</span>
+                                    <div class="energy-bar" id="intelligence-bar">
+                                        <div class="bar-segment filled"></div>
+                                        <div class="bar-segment filled"></div>
+                                        <div class="bar-segment filled"></div>
+                                        <div class="bar-segment"></div>
+                                        <div class="bar-segment"></div>
+                                        <div class="bar-segment"></div>
+                                        <div class="bar-segment"></div>
+                                        <div class="bar-segment"></div>
+                                        <div class="bar-segment"></div>
+                                        <div class="bar-segment"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Arma de Ataque -->
+                            <div class="stat-row">
+                                <span class="stat-label">ARMA DE ATAQUE:</span>
+                                <div class="stat-value-container">
+                                    <span class="weapon-text" id="weapon-text">LANZA BOTELLAS DE COPETE</span>
+                                </div>
+                            </div>
+
+                            <!-- Historia / Reseña -->
+                            <div class="stat-row bio-row">
+                                <span class="stat-label">HISTORIA:</span>
+                                <p class="bio-text" id="bio-text">
+                                    Sobrevive la semana a pura cerveza y rock n' roll. Su cerebro opera en modo ahorro de energía, pero su puntería lanzando botellas es letal. Debilidad secreta: Las chicas trans y el metal pesado.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Controles Interactivos -->
+                        <div class="audio-controls">
+                            <button id="btn-insert-coin" class="retro-btn">INSERT COIN</button>
+                            <button id="btn-play-sound" class="retro-btn">SELECT CHAR</button>
+                            <button id="btn-toggle-crt" class="retro-btn active">CRT EFFECT</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRID DE SELECCIÓN DE PERSONAJES -->
+                <div class="selection-grid-container">
+                    <h3 class="grid-title">SELECT YOUR FIGHTER</h3>
+                    <div class="fighters-grid">
+                        <div class="grid-slot selected" data-id="chananeitor">
+                            <img src="assets/chananeitor_portrait.png" alt="Chananeitor Thumb" class="slot-thumb">
+                            <span class="slot-name">CHANANEITOR</span>
+                        </div>
+                        <div class="grid-slot" data-id="marcos">
+                            <img src="assets/marcos_portrait.png" alt="Marcos Thumb" class="slot-thumb">
+                            <span class="slot-name">C. MARCOS</span>
+                        </div>
+                        <div class="grid-slot locked">
+                            <div class="slot-lock">?</div>
+                            <span class="slot-name">REVELAR...</span>
+                        </div>
+                        <div class="grid-slot locked">
+                            <div class="slot-lock">?</div>
+                            <span class="slot-name">REVELAR...</span>
+                        </div>
+                        <div class="grid-slot locked">
+                            <div class="slot-lock">?</div>
+                            <span class="slot-name">REVELAR...</span>
+                        </div>
+                        <div class="grid-slot locked">
+                            <div class="slot-lock">?</div>
+                            <span class="slot-name">REVELAR...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANTALLA 2: PANTALLA VERSUS (VS) -->
+            <div class="screen" id="vs-screen">
+                <div class="vs-container">
+                    <div class="vs-fighter player1">
+                        <div class="vs-portrait-border">
+                            <img src="" id="vs-p1-img" class="vs-img" alt="P1 Portrait">
+                        </div>
+                        <div class="vs-name" id="vs-p1-name">CHANANEITOR</div>
+                    </div>
+                    
+                    <div class="vs-badge">
+                        <div class="vs-text">VS</div>
+                    </div>
+                    
+                    <div class="vs-fighter player2">
+                        <div class="vs-portrait-border">
+                            <img src="" id="vs-p2-img" class="vs-img" alt="P2 Portrait">
+                        </div>
+                        <div class="vs-name" id="vs-p2-name">COMPAÑERO MARCOS</div>
+                    </div>
+                </div>
+                <div class="vs-announcement pulse-text">READY... FIGHT!</div>
+            </div>
+
+            <!-- PANTALLA 3: ESCENARIO DE COMBATE (CANVAS) -->
+            <div class="screen" id="fight-screen">
+                <!-- HUD de Combate estilo Street Fighter -->
+                <div class="fight-hud">
+                    <div class="hud-player player1">
+                        <div class="hud-name" id="hud-p1-name">CHANANEITOR</div>
+                        <div class="health-bar-container">
+                            <div class="health-bar-fill" id="hud-p1-health"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="hud-timer" id="hud-timer-text">99</div>
+                    
+                    <div class="hud-player player2">
+                        <div class="hud-name" id="hud-p2-name">COMPAÑERO MARCOS</div>
+                        <div class="health-bar-container">
+                            <div class="health-bar-fill" id="hud-p2-health"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contenedor del Lienzo del Juego -->
+                <div class="canvas-container">
+                    <canvas id="game-canvas" width="840" height="420"></canvas>
+                </div>
+
+                <!-- Guía de Controles -->
+                <div class="fight-controls-guide">
+                    CONTROLES: [←/→] MOVER | [↑] SALTAR | [↓] AGACHARSE | [A] ATACAR | [S] DEFENDER
+                </div>
+            </div>
+
+            <!-- PANTALLA 4: RESULTADO DEL COMBATE -->
+            <div class="screen" id="result-screen">
+                <div class="result-container">
+                    <h1 class="result-title" id="result-title-text">PLAYER 1 WINS!</h1>
+                    <p class="result-subtitle">K. O.</p>
+                    <button id="btn-return-select" class="retro-btn">INSERT COIN / PLAY AGAIN</button>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="arcade-footer">
+            <p>© 2026 METAL FIGHTER INC. - ALL RIGHTS RESERVED</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
