@@ -247,8 +247,8 @@ const fightersData = {
         fullbody: "assets/diego_side_transparent.png",
         intelligenceText: "Media 5/10 neuronas",
         intelligenceValue: 5,
-        weaponText: "CHUPETES SÓNICOS Y MAZO GLAM",
-        bio: "El menor del grupo, cariñosamente apodado 'La Guagua'. Fanático empedernido del Glam Rock de los 80, pasa el día peinándose el copete y maquillándose. Es el hijo adoptivo no oficial de Chananeitor (su 'padre' por broma de edad), quien intenta educarlo en las artes del metal pesado sin mucho éxito."
+        weaponText: "CHUPETES SÓNICOS Y MAMADERAS DE METAL",
+        bio: "Hijo adoptivo de chananeitor, quien intenta educarlo en las artes del alcohol sin mucho exito. Ten cuidado, que al menor descuido te lanzará sus chupetes de sonicos y sus mamaderas de metal"
     }
 };
 
@@ -451,7 +451,7 @@ function updateAI() {
                 projType = 'bottle';
                 playThrowBottleSound();
             } else if (p2.id === 'diego') {
-                projType = 'pacifier';
+                projType = Math.random() < 0.5 ? 'pacifier' : 'babybottle';
                 playThrowPacifierSound();
             } else {
                 playThrowSheepSound();
@@ -670,6 +670,24 @@ function gameLoop() {
             ctx.beginPath();
             ctx.arc(cx + 8, cy, 9, 0, Math.PI * 2);
             ctx.fill();
+        } else if (proj.type === 'babybottle') {
+            // Dibujar mamadera de metal/biberón (cuerpo gris/blanco, tapa rosa, tetina amarilla)
+            const cx = proj.x + 20;
+            const cy = proj.y + 20;
+            
+            // 1. Cuerpo de la mamadera (Gris metalizado/blanco)
+            ctx.fillStyle = '#b0b0b8';
+            ctx.fillRect(cx - 10, cy - 6, 16, 12);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(cx - 10, cy - 6, 16, 4); // Brillo superior
+            
+            // 2. Tapa/Collar (Rosa neón)
+            ctx.fillStyle = '#ff007f';
+            ctx.fillRect(cx + 6, cy - 8, 4, 16);
+            
+            // 3. Tetina (Amarillo/Marrón claro)
+            ctx.fillStyle = '#ffcc00';
+            ctx.fillRect(cx + 10, cy - 3, 4, 6);
         } else {
             // Dibujar ovejita grande y esponjosa con alta definición pixel art
             const centerX = proj.x + 20;
@@ -922,7 +940,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (p1.id === 'chananeitor') {
                 playThrowBottleSound();
             } else if (p1.id === 'diego') {
-                projType = 'pacifier';
+                projType = Math.random() < 0.5 ? 'pacifier' : 'babybottle';
                 playThrowPacifierSound();
             } else {
                 projType = 'sheep';
