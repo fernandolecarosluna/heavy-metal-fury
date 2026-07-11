@@ -703,4 +703,139 @@ body:has(#vs-screen.active) .game-logo {
     max-width: 120px;
 }
 
+/* --- PANTALLA DE INICIO (REFUGIO BAR) --- */
+#start-screen {
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, #0e0e16 0%, #030305 100%);
+    gap: 15px;
+}
+
+.start-screen-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+}
+
+.start-logo {
+    max-width: 320px;
+    height: auto;
+    filter: drop-shadow(0 0 10px rgba(255, 100, 0, 0.6));
+    margin-bottom: 5px;
+}
+
+.bar-entrance-frame {
+    border: 4px solid #2a2a3e;
+    border-radius: 8px;
+    padding: 4px;
+    background-color: #050508;
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
+    width: 250px;
+    height: 250px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bar-entrance-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: neonPulse 2s infinite alternate;
+}
+
+@keyframes neonPulse {
+    0% {
+        filter: brightness(0.9) contrast(1);
+    }
+    100% {
+        filter: brightness(1.1) contrast(1.1);
+    }
+}
+
+.start-controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.start-credits-display {
+    font-size: 10px;
+    color: var(--color-primary);
+    text-shadow: var(--glow-yellow);
+    margin-top: 5px;
+    font-family: var(--font-pixel);
+}
+
+/* Botón deshabilitado retro */
+.retro-btn.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    border-color: #555;
+    color: #888;
+}
+
+/* --- CURSOR Y SELECCIÓN PARA P1 Y P2 --- */
+.grid-slot.hover-p1 {
+    border-color: var(--color-accent) !important;
+    box-shadow: var(--glow-red) !important;
+}
+
+.grid-slot.hover-p2 {
+    border-color: var(--color-secondary) !important;
+    box-shadow: var(--glow-cyan) !important;
+}
+
+.grid-slot.selected-p1 {
+    border-color: var(--color-accent) !important;
+    box-shadow: var(--glow-red) !important;
+}
+
+.grid-slot.selected-p1::after {
+    content: "P1";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background-color: var(--color-accent);
+    color: #fff;
+    font-size: 6px;
+    font-family: var(--font-pixel);
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 10;
+}
+
+.grid-slot.selected-p2 {
+    border-color: var(--color-secondary) !important;
+    box-shadow: var(--glow-cyan) !important;
+}
+
+.grid-slot.selected-p2::after {
+    content: "P2";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: var(--color-secondary);
+    color: #000;
+    font-size: 6px;
+    font-family: var(--font-pixel);
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 10;
+}
+
+.prompt-fight-text {
+    font-size: 8px;
+    color: var(--color-success);
+    text-shadow: var(--glow-green);
+    animation: pulse 0.5s infinite alternate;
+    text-align: center;
+    margin-top: 5px;
+    font-family: var(--font-pixel);
+}
+
 
