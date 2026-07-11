@@ -276,7 +276,7 @@ const fightersData = {
         fullbody: "assets/bency_side_transparent.png",
         intelligenceText: "Media 5/10 neuronas",
         intelligenceValue: 5,
-        weaponText: "BARAJA DE CARTAS MÁGICAS",
+        weaponText: "BARAJA DE CARTAS MAGIC",
         bio: "Líder y vocalista de 'La Loco Lency Band' (LLB). En otoño e invierno se recluye a jugar cartas o a descansar en su cama con las piernas hacia el techo. Aunque siempre se queja del gobierno, confiesa haber votado por ellos. ¡Cuidado con su baraja de cartas explosivas!"
     }
 };
@@ -340,7 +340,8 @@ function createFighter(id, side, isPlayer) {
         attackCooldown: 0,
         flashTimer: 0,
         shieldColor: id === 'chananeitor' ? 'rgba(0, 255, 255, 0.4)' : (id === 'diego' ? 'rgba(255, 0, 150, 0.4)' : (id === 'bency' ? 'rgba(180, 0, 255, 0.4)' : 'rgba(0, 255, 102, 0.4)')),
-        blockingTimer: 0
+        blockingTimer: 0,
+        aiBlockHoldTimer: 0
     };
 }
 
@@ -434,18 +435,29 @@ function updateAI() {
 
     const distance = Math.abs(p2.x - p1.x);
 
-    // Decisión de cubrirse si ve venir un proyectil de cerca
+    // Decisión de cubrirse si ve venir un proyectil de cerca (bidireccional)
     let projectileDanger = false;
     for (let proj of projectiles) {
-        if (proj.owner === 'p1' && Math.abs(proj.x - p2.x) < 220 && proj.x < p2.x) {
-            projectileDanger = true;
-            break;
+        if (proj.owner === 'p1') {
+            const headingToP2 = (proj.vx > 0 && proj.x < p2.x) || (proj.vx < 0 && proj.x > p2.x);
+            if (headingToP2 && Math.abs(proj.x - p2.x) < 300) {
+                projectileDanger = true;
+                break;
+            }
         }
     }
 
-    if (projectileDanger) {
-        // 70% de probabilidades de bloquear el proyectil
-        p2.isBlocking = Math.random() < 0.7;
+    if (p2.aiBlockHoldTimer > 0) {
+        p2.aiBlockHoldTimer--;
+        p2.isBlocking = true;
+    } else if (projectileDanger) {
+        // Sostener el bloqueo de forma continua para evitar parpadeos
+        if (!p2.isBlocking && Math.random() < 0.75) {
+            p2.isBlocking = true;
+            p2.aiBlockHoldTimer = 25 + Math.floor(Math.random() * 20); // 25-45 frames (~0.5s)
+        } else {
+            p2.isBlocking = false;
+        }
     } else {
         p2.isBlocking = false;
     }
