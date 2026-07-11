@@ -296,7 +296,7 @@ let canvas = null;
 let ctx = null;
 let gameLoopId = null;
 let fightActive = false;
-let gameTimer = 99;
+let gameTimer = 60;
 let timerInterval = null;
 
 // Fondo y Sprites precargados
@@ -341,7 +341,8 @@ function createFighter(id, side, isPlayer) {
         flashTimer: 0,
         shieldColor: id === 'chananeitor' ? 'rgba(0, 255, 255, 0.4)' : (id === 'diego' ? 'rgba(255, 0, 150, 0.4)' : (id === 'bency' ? 'rgba(180, 0, 255, 0.4)' : 'rgba(0, 255, 102, 0.4)')),
         blockingTimer: 0,
-        aiBlockHoldTimer: 0
+        aiBlockHoldTimer: 0,
+        shieldCooldown: 0
     };
 }
 
@@ -366,7 +367,7 @@ function startFight() {
     fightActive = true;
     projectiles = [];
     particles = [];
-    gameTimer = 99;
+    gameTimer = 60;
     document.getElementById("hud-timer-text").textContent = gameTimer;
 
     // Crear luchadores
@@ -450,16 +451,22 @@ function updateAI() {
     if (p2.aiBlockHoldTimer > 0) {
         p2.aiBlockHoldTimer--;
         p2.isBlocking = true;
-    } else if (projectileDanger) {
+    } else if (projectileDanger && p2.shieldCooldown === 0) {
         // Sostener el bloqueo de forma continua para evitar parpadeos
         if (!p2.isBlocking && Math.random() < 0.75) {
             p2.isBlocking = true;
             p2.aiBlockHoldTimer = 25 + Math.floor(Math.random() * 20); // 25-45 frames (~0.5s)
         } else {
-            p2.isBlocking = false;
+            if (p2.isBlocking) {
+                p2.isBlocking = false;
+                p2.shieldCooldown = 300; // 5 segundos de enfriamiento
+            }
         }
     } else {
-        p2.isBlocking = false;
+        if (p2.isBlocking) {
+            p2.isBlocking = false;
+            p2.shieldCooldown = 300; // 5 segundos de enfriamiento
+        }
     }
 
     if (!p2.isBlocking && !p2.isJumping) {
@@ -550,15 +557,23 @@ function gameLoop() {
     }
 
     // Controles físicos del jugador
-    if (keys['KeyS']) {
+    if (p1.shieldCooldown > 0) p1.shieldCooldown--;
+
+    if (keys['KeyS'] && p1.shieldCooldown === 0) {
         p1.blockingTimer++;
         if (p1.blockingTimer <= 60) { // 1 segundo (60 frames a 60fps)
             p1.isBlocking = true;
         } else {
-            p1.isBlocking = false;
+            if (p1.isBlocking) {
+                p1.isBlocking = false;
+                p1.shieldCooldown = 300; // 5 segundos de enfriamiento
+            }
         }
     } else {
-        p1.isBlocking = false;
+        if (p1.isBlocking) {
+            p1.isBlocking = false;
+            p1.shieldCooldown = 300; // 5 segundos de enfriamiento
+        }
         p1.blockingTimer = 0;
     }
     p1.isCrouching = keys['ArrowDown'] || false;
@@ -594,10 +609,13 @@ function gameLoop() {
     if (p2.flashTimer > 0) p2.flashTimer--;
     updateAI();
 
+    if (p2.shieldCooldown > 0) p2.shieldCooldown--;
+
     if (p2.isBlocking) {
         p2.blockingTimer++;
         if (p2.blockingTimer > 60) {
             p2.isBlocking = false;
+            p2.shieldCooldown = 300; // 5 segundos de enfriamiento
         }
     } else {
         p2.blockingTimer = 0;
@@ -1099,6 +1117,36 @@ document.addEventListener("DOMContentLoaded", () => {
                 insertCoin();
             } else if (e.code === 'KeyS' || e.key.toLowerCase() === 's') {
                 startGame();
+            }
+            return;
+        }
+
+        if (document.getElementById("result-screen").classList.contains("active")) {
+            if (e.code === 'KeyA' || e.key.toLowerCase() === 'a') {
+                insertCoin();
+            } else if (e.code === 'KeyS' || e.key.toLowerCase() === 's') {
+                if (credits > 0) {
+                    playSelectSound();
+                    credits--;
+                    updateCreditsDisplay();
+
+                    document.getElementById("result-screen").classList.remove("active");
+                    document.getElementById("select-screen").classList.add("active");
+
+                    selectionPhase = 'p1';
+                    selectedP1Id = null;
+                    selectedP2Id = null;
+                    cursorIndex = 0;
+                    if (fightPromptText) fightPromptText.textContent = "";
+
+                    slots.forEach(s => {
+                        s.classList.remove("selected", "selected-p1", "selected-p2", "hover-p1", "hover-p2");
+                    });
+                    slots[cursorIndex].classList.add("hover-p1");
+                    loadFighter(slots[cursorIndex].getAttribute("data-id"));
+                } else {
+                    playLockedSound();
+                }
             }
             return;
         }
