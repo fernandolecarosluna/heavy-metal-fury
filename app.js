@@ -220,6 +220,26 @@ function playKoSound() {
     osc.stop(now + 1.2);
 }
 
+// Sonido: Lanzar carta (Magia rápida de 8 bits)
+function playThrowCardSound() {
+    if (!audioCtx) initAudio();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(150, now + 0.15);
+    
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.15);
+}
+
 
 // --- BASE DE DATOS DE COMBATIENTES (METALEROS) ---
 const fightersData = {
@@ -249,6 +269,15 @@ const fightersData = {
         intelligenceValue: 5,
         weaponText: "CHUPETES SÓNICOS Y MAMADERAS DE METAL",
         bio: "La guaga Dieguito es el hijo adoptivo de chananeitor, quien intenta educarlo en las artes del alcohol sin mucho exito. Ten cuidado, que al menor descuido te lanzará sus chupetes sonicos y sus mamaderas de metal"
+    },
+    bency: {
+        name: "BENCY",
+        portrait: "assets/bency_portrait.png",
+        fullbody: "assets/bency_side_transparent.png",
+        intelligenceText: "Media 5/10 neuronas",
+        intelligenceValue: 5,
+        weaponText: "BARAJA DE CARTAS MÁGICAS",
+        bio: "Líder y vocalista de 'La Loco Lency Band' (LLB). En otoño e invierno se recluye a jugar cartas o a descansar en su cama con las piernas hacia el techo. Aunque siempre se queja del gobierno, confiesa haber votado por ellos. ¡Cuidado con su baraja de cartas explosivas!"
     }
 };
 
@@ -310,7 +339,7 @@ function createFighter(id, side, isPlayer) {
         direction: side === 'left' ? 1 : -1,
         attackCooldown: 0,
         flashTimer: 0,
-        shieldColor: id === 'chananeitor' ? 'rgba(0, 255, 255, 0.4)' : (id === 'diego' ? 'rgba(255, 0, 150, 0.4)' : 'rgba(0, 255, 102, 0.4)'),
+        shieldColor: id === 'chananeitor' ? 'rgba(0, 255, 255, 0.4)' : (id === 'diego' ? 'rgba(255, 0, 150, 0.4)' : (id === 'bency' ? 'rgba(180, 0, 255, 0.4)' : 'rgba(0, 255, 102, 0.4)')),
         blockingTimer: 0
     };
 }
@@ -458,6 +487,9 @@ function updateAI() {
             } else if (p2.id === 'diego') {
                 projType = Math.random() < 0.5 ? 'pacifier' : 'babybottle';
                 playThrowPacifierSound();
+            } else if (p2.id === 'bency') {
+                projType = 'card';
+                playThrowCardSound();
             } else {
                 playThrowSheepSound();
             }
@@ -673,6 +705,15 @@ function gameLoop() {
             ctx.fillRect(proj.x, proj.y - 4, 20, 24);
             ctx.fillStyle = '#00ff66';
             ctx.fillRect(proj.x + 6, proj.y - 12, 8, 8);
+        } else if (proj.type === 'card') {
+            // Dibujar carta mágica de juego
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(proj.x, proj.y + 3, 20, 14);
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(proj.x, proj.y + 3, 20, 14);
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(proj.x + 9, proj.y + 9, 2, 2);
         } else if (proj.type === 'pacifier') {
             // Dibujar chupete sónico de glam rock (círculo rosa, boquilla blanca/amarilla y anillo cian)
             const cx = proj.x + 10;
@@ -952,6 +993,9 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("vs-p2-img").src = p2Data.portrait;
             document.getElementById("vs-p2-name").textContent = p2Data.name;
 
+            activeFighterId = selectedP1Id;
+            activeOpponentId = selectedP2Id;
+
             document.getElementById("select-screen").classList.remove("active");
             document.getElementById("vs-screen").classList.add("active");
 
@@ -1013,6 +1057,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else if (p1.id === 'diego') {
                     projType = Math.random() < 0.5 ? 'pacifier' : 'babybottle';
                     playThrowPacifierSound();
+                } else if (p1.id === 'bency') {
+                    projType = 'card';
+                    playThrowCardSound();
                 } else {
                     projType = 'sheep';
                     playThrowSheepSound();
@@ -1036,9 +1083,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (document.getElementById("start-screen").classList.contains("active")) {
-            if (e.code === 'KeyA') {
+            if (e.code === 'KeyA' || e.key.toLowerCase() === 'a') {
                 insertCoin();
-            } else if (e.code === 'KeyS') {
+            } else if (e.code === 'KeyS' || e.key.toLowerCase() === 's') {
                 startGame();
             }
             return;
@@ -1049,9 +1096,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 moveCursor(-1);
             } else if (e.code === 'ArrowRight') {
                 moveCursor(1);
-            } else if (e.code === 'KeyA') {
+            } else if (e.code === 'KeyA' || e.key.toLowerCase() === 'a') {
                 confirmSelection();
-            } else if (e.code === 'KeyS') {
+            } else if (e.code === 'KeyS' || e.key.toLowerCase() === 's') {
                 triggerFight();
             }
             return;
