@@ -248,7 +248,7 @@ const fightersData = {
         intelligenceText: "Media 5/10 neuronas",
         intelligenceValue: 5,
         weaponText: "CHUPETES SÓNICOS Y MAMADERAS DE METAL",
-        bio: "Hijo adoptivo de chananeitor, quien intenta educarlo en las artes del alcohol sin mucho exito. Ten cuidado, que al menor descuido te lanzará sus chupetes de sonicos y sus mamaderas de metal"
+        bio: "La guaga Dieguito es el hijo adoptivo de chananeitor, quien intenta educarlo en las artes del alcohol sin mucho exito. Ten cuidado, que al menor descuido te lanzará sus chupetes sonicos y sus mamaderas de metal"
     }
 };
 
@@ -306,7 +306,8 @@ function createFighter(id, side, isPlayer) {
         direction: side === 'left' ? 1 : -1,
         attackCooldown: 0,
         flashTimer: 0,
-        shieldColor: id === 'chananeitor' ? 'rgba(0, 255, 255, 0.4)' : (id === 'diego' ? 'rgba(255, 0, 150, 0.4)' : 'rgba(0, 255, 102, 0.4)')
+        shieldColor: id === 'chananeitor' ? 'rgba(0, 255, 255, 0.4)' : (id === 'diego' ? 'rgba(255, 0, 150, 0.4)' : 'rgba(0, 255, 102, 0.4)'),
+        blockingTimer: 0
     };
 }
 
@@ -501,7 +502,17 @@ function gameLoop() {
     }
 
     // Controles físicos del jugador
-    p1.isBlocking = keys['KeyS'] || false;
+    if (keys['KeyS']) {
+        p1.blockingTimer++;
+        if (p1.blockingTimer <= 120) { // 2 segundos (120 frames a 60fps)
+            p1.isBlocking = true;
+        } else {
+            p1.isBlocking = false;
+        }
+    } else {
+        p1.isBlocking = false;
+        p1.blockingTimer = 0;
+    }
     p1.isCrouching = keys['ArrowDown'] || false;
 
     if (!p1.isBlocking) {
@@ -534,6 +545,15 @@ function gameLoop() {
     // --- 2. PROCESAR PLAYER 2 (IA) ---
     if (p2.flashTimer > 0) p2.flashTimer--;
     updateAI();
+
+    if (p2.isBlocking) {
+        p2.blockingTimer++;
+        if (p2.blockingTimer > 120) {
+            p2.isBlocking = false;
+        }
+    } else {
+        p2.blockingTimer = 0;
+    }
 
     p2.y += p2.vy;
     if (p2.y < floorHeight) {
