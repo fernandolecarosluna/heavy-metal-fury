@@ -27,8 +27,25 @@
 
         <main class="arcade-screen">
             
+            <!-- PANTALLA 0: INICIO / PRESENTACIÓN -->
+            <div class="screen active" id="start-screen">
+                <div class="start-screen-container">
+                    <img src="assets/logo_heavy_metal_fury.png" alt="HEAVY METAL FURY LOGO" class="start-logo">
+                    <div class="bar-entrance-frame">
+                        <img src="assets/refugio_bar_entrance.png" alt="Refugio Bar Entrada" class="bar-entrance-img">
+                    </div>
+                    <div class="start-controls">
+                        <button id="btn-start-insert-coin" class="retro-btn">INSERT COIN (A)</button>
+                        <button id="btn-start-game" class="retro-btn locked" disabled>START GAME (S)</button>
+                    </div>
+                    <div class="start-credits-display">
+                        <span id="start-credits-text">CREDITS: 00</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- PANTALLA 1: SELECCIÓN DE PERSONAJES -->
-            <div class="screen active" id="select-screen">
+            <div class="screen" id="select-screen">
                 <div class="character-profile-container">
                     <!-- Columna Izquierda: Galería Visual -->
                     <div class="visual-panel">
@@ -83,9 +100,11 @@
                         </div>
 
                         <!-- Controles Interactivos -->
-                        <div class="audio-controls">
-                            <button id="btn-insert-coin" class="retro-btn">INSERT COIN</button>
-                            <button id="btn-play-sound" class="retro-btn">SELECT CHAR</button>
+                        <div class="audio-controls" style="display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%;">
+                            <div class="fight-controls-guide" style="font-size: 8px; color: var(--color-primary); text-shadow: var(--glow-yellow); text-align: center;">
+                                CONTROLES: [←/→] MOVER | [A] SELECCIONAR | [S] LUCHAR
+                            </div>
+                            <div id="fight-prompt-text" class="prompt-fight-text"></div>
                         </div>
                     </div>
                 </div>
