@@ -461,7 +461,7 @@ function updateAI() {
             const spawnY = heightType === 'high' ? p2.y + 10 : p2.y + 110;
 
             projectiles.push({
-                x: p2.x + (p2.direction === 1 ? p2.width : -40),
+                x: p2.x + (p2.direction === 1 ? p2.width - 70 : 30),
                 y: spawnY,
                 vx: p2.direction * 4.5, // Ralentizado de 8
                 width: 40, // Agrandado de 25
@@ -800,7 +800,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const btnInsertCoin = document.getElementById("btn-insert-coin");
     const btnPlaySound = document.getElementById("btn-play-sound");
-    const btnToggleCrt = document.getElementById("btn-toggle-crt");
     const btnReturnSelect = document.getElementById("btn-return-select");
     const insertCoinText = document.getElementById("insert-coin-text");
     const creditsCount = document.getElementById("credits-count");
@@ -863,13 +862,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (credits === 0) insertCoinText.textContent = "INSERT COIN";
             }, 1500);
         }
-    });
-
-    // Filtro CRT
-    btnToggleCrt.addEventListener("click", () => {
-        playCoinSound();
-        document.body.classList.toggle("crt-off");
-        btnToggleCrt.classList.toggle("active");
     });
 
     // Regresar al menú de selección al terminar el combate
@@ -951,7 +943,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const spawnY = heightType === 'high' ? p1.y + 10 : p1.y + 110;
 
             projectiles.push({
-                x: p1.x + (p1.direction === 1 ? p1.width : -40),
+                x: p1.x + (p1.direction === 1 ? p1.width - 70 : 30),
                 y: spawnY,
                 vx: p1.direction * 4.5, // Ralentizado de 8
                 width: 40, // Agrandado de 25
