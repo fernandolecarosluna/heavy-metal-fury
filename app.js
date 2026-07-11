@@ -257,6 +257,10 @@ const fightersData = {
 let credits = 0;
 let activeFighterId = "chananeitor";
 let activeOpponentId = "marcos";
+let selectionPhase = 'p1'; // 'p1', 'p2', 'ready'
+let cursorIndex = 0;
+let selectedP1Id = null;
+let selectedP2Id = null;
 
 // Variables del juego
 let canvas = null;
@@ -465,8 +469,8 @@ function updateAI() {
                 x: p2.x + (p2.direction === 1 ? p2.width - 70 : 30),
                 y: spawnY,
                 vx: p2.direction * 4.5, // Ralentizado de 8
-                width: 40, // Agrandado de 25
-                height: 40, // Agrandado de 25
+                width: 20,
+                height: 20,
                 type: projType,
                 owner: 'p2',
                 heightType: heightType
@@ -504,7 +508,7 @@ function gameLoop() {
     // Controles físicos del jugador
     if (keys['KeyS']) {
         p1.blockingTimer++;
-        if (p1.blockingTimer <= 120) { // 2 segundos (120 frames a 60fps)
+        if (p1.blockingTimer <= 60) { // 1 segundo (60 frames a 60fps)
             p1.isBlocking = true;
         } else {
             p1.isBlocking = false;
@@ -548,7 +552,7 @@ function gameLoop() {
 
     if (p2.isBlocking) {
         p2.blockingTimer++;
-        if (p2.blockingTimer > 120) {
+        if (p2.blockingTimer > 60) {
             p2.isBlocking = false;
         }
     } else {
@@ -585,10 +589,10 @@ function gameLoop() {
         
         // Caja de colisión reducida del objetivo (Ajustada para esquivar proyectiles altos/bajos)
         let targetBox = {
-            x: target.x + 15,
-            y: target.isCrouching ? target.y + 65 : target.y,
-            width: target.width - 30,
-            height: target.isCrouching ? target.height - 65 : target.height
+            x: target.x + 40,
+            y: target.isCrouching ? target.y + 65 : target.y + 10,
+            width: 50,
+            height: target.isCrouching ? target.height - 65 : target.height - 10
         };
 
         // Colisión de caja delimitadora
@@ -666,100 +670,74 @@ function gameLoop() {
         if (proj.type === 'bottle') {
             // Dibujar botella de copete grande
             ctx.fillStyle = '#8b4513';
-            ctx.fillRect(proj.x, proj.y + 12, 20, 28);
+            ctx.fillRect(proj.x, proj.y - 4, 20, 24);
             ctx.fillStyle = '#00ff66';
-            ctx.fillRect(proj.x + 6, proj.y, 8, 12);
+            ctx.fillRect(proj.x + 6, proj.y - 12, 8, 8);
         } else if (proj.type === 'pacifier') {
             // Dibujar chupete sónico de glam rock (círculo rosa, boquilla blanca/amarilla y anillo cian)
-            const cx = proj.x + 20;
-            const cy = proj.y + 20;
+            const cx = proj.x + 10;
+            const cy = proj.y + 10;
             
             // 1. Anillo/Mango del chupete (Cian)
             ctx.strokeStyle = '#00ffff';
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 2.5;
             ctx.beginPath();
-            ctx.arc(cx - 10, cy, 8, 0, Math.PI * 2);
+            ctx.arc(cx - 5, cy, 4, 0, Math.PI * 2);
             ctx.stroke();
             
             // 2. Base del chupete (Rosa Glam)
             ctx.fillStyle = '#ff00aa';
-            ctx.fillRect(cx - 4, cy - 12, 6, 24);
+            ctx.fillRect(cx - 2, cy - 6, 3, 12);
             
             // 3. Bulbo/Tetina (Amarillo brillante)
             ctx.fillStyle = '#ffff00';
             ctx.beginPath();
-            ctx.arc(cx + 8, cy, 9, 0, Math.PI * 2);
+            ctx.arc(cx + 4, cy, 4.5, 0, Math.PI * 2);
             ctx.fill();
         } else if (proj.type === 'babybottle') {
             // Dibujar mamadera de metal/biberón (cuerpo gris/blanco, tapa rosa, tetina amarilla)
-            const cx = proj.x + 20;
-            const cy = proj.y + 20;
+            const cx = proj.x + 10;
+            const cy = proj.y + 10;
             
             // 1. Cuerpo de la mamadera (Gris metalizado/blanco)
             ctx.fillStyle = '#b0b0b8';
-            ctx.fillRect(cx - 10, cy - 6, 16, 12);
+            ctx.fillRect(cx - 5, cy - 3, 8, 6);
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(cx - 10, cy - 6, 16, 4); // Brillo superior
+            ctx.fillRect(cx - 5, cy - 3, 8, 2); // Brillo superior
             
             // 2. Tapa/Collar (Rosa neón)
             ctx.fillStyle = '#ff007f';
-            ctx.fillRect(cx + 6, cy - 8, 4, 16);
+            ctx.fillRect(cx + 3, cy - 4, 2, 8);
             
             // 3. Tetina (Amarillo/Marrón claro)
             ctx.fillStyle = '#ffcc00';
-            ctx.fillRect(cx + 10, cy - 3, 4, 6);
+            ctx.fillRect(cx + 5, cy - 1.5, 2, 3);
         } else {
-            // Dibujar ovejita grande y esponjosa con alta definición pixel art
-            const centerX = proj.x + 20;
-            const centerY = proj.y + 20;
+            // Dibujar ovejita pequeña y esponjosa
+            const centerX = proj.x + 10;
+            const centerY = proj.y + 10;
             const dir = proj.vx > 0 ? 1 : -1;
 
             // 1. Patas negras de la ovejita
             ctx.fillStyle = '#111111';
-            ctx.fillRect(centerX - 10, centerY + 8, 4, 10);
-            ctx.fillRect(centerX - 2, centerY + 8, 4, 10);
-            ctx.fillRect(centerX + 6, centerY + 8, 4, 10);
+            ctx.fillRect(centerX - 5, centerY + 4, 2, 5);
+            ctx.fillRect(centerX - 1, centerY + 4, 2, 5);
+            ctx.fillRect(centerX + 3, centerY + 4, 2, 5);
 
-            // 2. Cuerpo esponjoso (como una nube: varios círculos superpuestos)
+            // 2. Cuerpo esponjoso ( lana )
             ctx.fillStyle = '#f5f5fa';
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 14, 0, Math.PI * 2); // Centro
-            ctx.arc(centerX - 10, centerY - 2, 10, 0, Math.PI * 2); // Izq
-            ctx.arc(centerX + 10, centerY - 2, 10, 0, Math.PI * 2); // Der
-            ctx.arc(centerX, centerY - 10, 12, 0, Math.PI * 2); // Arriba
-            ctx.arc(centerX - 8, centerY + 6, 9, 0, Math.PI * 2); // Abajo Izq
-            ctx.arc(centerX + 8, centerY + 6, 9, 0, Math.PI * 2); // Abajo Der
+            ctx.arc(centerX, centerY, 7, 0, Math.PI * 2);
+            ctx.arc(centerX - 5, centerY - 1, 5, 0, Math.PI * 2);
+            ctx.arc(centerX + 5, centerY - 1, 5, 0, Math.PI * 2);
             ctx.fill();
 
-            // Textura/sombra gris claro en la lana
-            ctx.fillStyle = '#dcdce5';
-            ctx.beginPath();
-            ctx.arc(centerX - 4, centerY - 4, 3, 0, Math.PI * 2);
-            ctx.arc(centerX + 4, centerY + 2, 3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 3. Cabeza negra (apuntando en dirección al movimiento)
+            // 3. Cabeza negra
             ctx.fillStyle = '#111111';
             ctx.beginPath();
-            const headX = centerX + (dir * 13);
-            const headY = centerY + 2;
-            ctx.arc(headX, headY, 8, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Oreja
-            ctx.beginPath();
-            ctx.arc(headX - (dir * 4), headY - 4, 3, 0, Math.PI * 2);
-            ctx.fill();
-            // Detalle rosa de la oreja
-            ctx.fillStyle = '#ffb6c1';
-            ctx.beginPath();
-            ctx.arc(headX - (dir * 4), headY - 4, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Ojo pequeño blanco
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(headX + (dir * 2), headY - 2, 1.5, 0, Math.PI * 2);
+            const headX = centerX + (dir * 7);
+            const headY = centerY + 1;
+            ctx.arc(headX, headY, 4, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.restore();
@@ -818,80 +796,69 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas = document.getElementById("game-canvas");
     ctx = canvas.getContext("2d");
 
-    const btnInsertCoin = document.getElementById("btn-insert-coin");
-    const btnPlaySound = document.getElementById("btn-play-sound");
+    const btnStartInsertCoin = document.getElementById("btn-start-insert-coin");
+    const btnStartGame = document.getElementById("btn-start-game");
     const btnReturnSelect = document.getElementById("btn-return-select");
-    const insertCoinText = document.getElementById("insert-coin-text");
+    const startCreditsText = document.getElementById("start-credits-text");
     const creditsCount = document.getElementById("credits-count");
     const slots = document.querySelectorAll(".grid-slot");
+    const fightPromptText = document.getElementById("fight-prompt-text");
 
-    // Insertar crédito
-    btnInsertCoin.addEventListener("click", () => {
+    const updateCreditsDisplay = () => {
+        const text = `CREDITS: ${credits.toString().padStart(2, '0')}`;
+        if (startCreditsText) startCreditsText.textContent = text;
+        if (creditsCount) creditsCount.textContent = text;
+
+        if (credits > 0) {
+            btnStartGame.classList.remove("locked");
+            btnStartGame.removeAttribute("disabled");
+        } else {
+            btnStartGame.classList.add("locked");
+            btnStartGame.setAttribute("disabled", "true");
+        }
+    };
+
+    const insertCoin = () => {
         playCoinSound();
         credits++;
-        creditsCount.textContent = `CREDITS: ${credits.toString().padStart(2, '0')}`;
-        if (credits > 0) {
-            insertCoinText.textContent = "PRESS START";
-            insertCoinText.classList.add("pulse-text");
-        }
-    });
+        updateCreditsDisplay();
+    };
 
-    // Iniciar el combate al pulsar SELECT CHAR
-    btnPlaySound.addEventListener("click", () => {
+    const startGame = () => {
         if (credits > 0) {
             playSelectSound();
             credits--;
-            creditsCount.textContent = `CREDITS: ${credits.toString().padStart(2, '0')}`;
-            if (credits === 0) {
-                insertCoinText.textContent = "INSERT COIN";
-                insertCoinText.classList.remove("pulse-text");
-            }
+            updateCreditsDisplay();
 
-            // Preparar retratos y nombres en Versus
-            const p1Data = fightersData[activeFighterId];
-            
-            // Elegir rival
-            const keysArray = Object.keys(fightersData);
-            if (keysArray.length > 1) {
-                const filtered = keysArray.filter(k => k !== activeFighterId);
-                activeOpponentId = filtered[Math.floor(Math.random() * filtered.length)];
-            } else {
-                activeOpponentId = activeFighterId;
-            }
-            const p2Data = fightersData[activeOpponentId];
+            document.getElementById("start-screen").classList.remove("active");
+            document.getElementById("select-screen").classList.add("active");
 
-            document.getElementById("vs-p1-img").src = p1Data.portrait;
-            document.getElementById("vs-p1-name").textContent = p1Data.name;
-            
-            document.getElementById("vs-p2-img").src = p2Data.portrait;
-            document.getElementById("vs-p2-name").textContent = p2Data.name;
+            selectionPhase = 'p1';
+            selectedP1Id = null;
+            selectedP2Id = null;
+            cursorIndex = 0;
+            if (fightPromptText) fightPromptText.textContent = "";
 
-            // Ocultar selección y abrir pantalla Versus
-            document.getElementById("select-screen").classList.remove("active");
-            document.getElementById("vs-screen").classList.add("active");
+            slots.forEach(s => {
+                s.classList.remove("selected", "selected-p1", "selected-p2", "hover-p1", "hover-p2");
+            });
 
-            // Mostrar el combate tras 3 segundos de carga dramática
-            setTimeout(() => {
-                startFight();
-            }, 3000);
-
+            slots[cursorIndex].classList.add("hover-p1");
+            const id = slots[cursorIndex].getAttribute("data-id");
+            loadFighter(id);
         } else {
             playLockedSound();
-            insertCoinText.textContent = "INSERT COIN FIRST!";
-            setTimeout(() => {
-                if (credits === 0) insertCoinText.textContent = "INSERT COIN";
-            }, 1500);
         }
+    };
+
+    btnStartInsertCoin.addEventListener("click", () => {
+        insertCoin();
     });
 
-    // Regresar al menú de selección al terminar el combate
-    btnReturnSelect.addEventListener("click", () => {
-        playCoinSound();
-        document.getElementById("result-screen").classList.remove("active");
-        document.getElementById("select-screen").classList.add("active");
+    btnStartGame.addEventListener("click", () => {
+        startGame();
     });
 
-    // Cargar estadísticas en la pantalla de selección
     function loadFighter(id) {
         activeFighterId = id;
         const data = fightersData[id];
@@ -916,66 +883,184 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Grid de selección
-    slots.forEach(slot => {
-        slot.addEventListener("click", () => {
-            if (slot.classList.contains("locked")) {
-                playLockedSound();
-                slot.style.transform = "translateX(5px)";
+    const moveCursor = (dir) => {
+        slots.forEach(s => s.classList.remove("hover-p1", "hover-p2"));
+        cursorIndex = (cursorIndex + dir + 6) % 6;
+
+        if (selectionPhase === 'p1') {
+            slots[cursorIndex].classList.add("hover-p1");
+        } else if (selectionPhase === 'p2') {
+            slots[cursorIndex].classList.add("hover-p2");
+        }
+
+        const id = slots[cursorIndex].getAttribute("data-id");
+        if (id && fightersData[id]) {
+            loadFighter(id);
+        }
+    };
+
+    const confirmSelection = () => {
+        const slot = slots[cursorIndex];
+        const id = slot.getAttribute("data-id");
+
+        if (slot.classList.contains("locked") || !id) {
+            playLockedSound();
+            slot.style.transform = "translateX(5px)";
+            setTimeout(() => slot.style.transform = "none", 50);
+            setTimeout(() => {
+                slot.style.transform = "translateX(-5px)";
                 setTimeout(() => slot.style.transform = "none", 50);
-                setTimeout(() => {
-                    slot.style.transform = "translateX(-5px)";
-                    setTimeout(() => slot.style.transform = "none", 50);
-                }, 50);
-            } else {
-                playSelectSound();
-                slots.forEach(s => s.classList.remove("selected"));
-                slot.classList.add("selected");
-                
-                const id = slot.getAttribute("data-id");
-                loadFighter(id);
+            }, 50);
+            return;
+        }
+
+        if (selectionPhase === 'p1') {
+            playSelectSound();
+            selectedP1Id = id;
+            activeFighterId = id;
+            slots.forEach(s => s.classList.remove("selected-p1", "hover-p1"));
+            slot.classList.add("selected-p1");
+
+            selectionPhase = 'p2';
+            cursorIndex = (cursorIndex + 1) % 3;
+            slots[cursorIndex].classList.add("hover-p2");
+            loadFighter(slots[cursorIndex].getAttribute("data-id"));
+        } else if (selectionPhase === 'p2') {
+            playSelectSound();
+            selectedP2Id = id;
+            activeOpponentId = id;
+            slots.forEach(s => s.classList.remove("selected-p2", "hover-p2"));
+            slot.classList.add("selected-p2");
+
+            selectionPhase = 'ready';
+            if (fightPromptText) {
+                fightPromptText.textContent = "¡READY! PRESIONA [S] PARA COMENZAR EL COMBATE";
+            }
+        }
+    };
+
+    const triggerFight = () => {
+        if (selectionPhase === 'ready' && selectedP1Id && selectedP2Id) {
+            playSelectSound();
+
+            const p1Data = fightersData[selectedP1Id];
+            const p2Data = fightersData[selectedP2Id];
+
+            document.getElementById("vs-p1-img").src = p1Data.portrait;
+            document.getElementById("vs-p1-name").textContent = p1Data.name;
+            
+            document.getElementById("vs-p2-img").src = p2Data.portrait;
+            document.getElementById("vs-p2-name").textContent = p2Data.name;
+
+            document.getElementById("select-screen").classList.remove("active");
+            document.getElementById("vs-screen").classList.add("active");
+
+            setTimeout(() => {
+                startFight();
+            }, 3000);
+        } else {
+            playLockedSound();
+        }
+    };
+
+    slots.forEach((slot, index) => {
+        slot.addEventListener("click", () => {
+            if (selectionPhase === 'p1') {
+                cursorIndex = index;
+                confirmSelection();
+            } else if (selectionPhase === 'p2') {
+                cursorIndex = index;
+                confirmSelection();
             }
         });
+    });
+
+    if (fightPromptText) {
+        fightPromptText.addEventListener("click", () => {
+            triggerFight();
+        });
+    }
+
+    btnReturnSelect.addEventListener("click", () => {
+        playCoinSound();
+        document.getElementById("result-screen").classList.remove("active");
+        document.getElementById("select-screen").classList.add("active");
+
+        selectionPhase = 'p1';
+        selectedP1Id = null;
+        selectedP2Id = null;
+        cursorIndex = 0;
+        if (fightPromptText) fightPromptText.textContent = "";
+
+        slots.forEach(s => {
+            s.classList.remove("selected", "selected-p1", "selected-p2", "hover-p1", "hover-p2");
+        });
+        slots[cursorIndex].classList.add("hover-p1");
+        loadFighter(slots[cursorIndex].getAttribute("data-id"));
     });
 
     // --- CAPTURA DE EVENTOS DE TECLADO ---
     window.addEventListener("keydown", (e) => {
         keys[e.code] = true;
 
-        if (!fightActive || !p1) return;
+        if (fightActive && p1) {
+            if (e.code === 'KeyA' && p1.attackCooldown === 0 && !p1.isCrouching && !p1.isBlocking) {
+                p1.attackCooldown = 40;
 
-        // Disparo de ataque del jugador
-        if (e.code === 'KeyA' && p1.attackCooldown === 0 && !p1.isCrouching && !p1.isBlocking) {
-            p1.attackCooldown = 40; // Enfriamiento de ataque
+                let projType = 'bottle';
+                if (p1.id === 'chananeitor') {
+                    playThrowBottleSound();
+                } else if (p1.id === 'diego') {
+                    projType = Math.random() < 0.5 ? 'pacifier' : 'babybottle';
+                    playThrowPacifierSound();
+                } else {
+                    projType = 'sheep';
+                    playThrowSheepSound();
+                }
 
-            let projType = 'bottle';
-            if (p1.id === 'chananeitor') {
-                playThrowBottleSound();
-            } else if (p1.id === 'diego') {
-                projType = Math.random() < 0.5 ? 'pacifier' : 'babybottle';
-                playThrowPacifierSound();
-            } else {
-                projType = 'sheep';
-                playThrowSheepSound();
+                const heightType = Math.random() < 0.5 ? 'high' : 'low';
+                const spawnY = heightType === 'high' ? p1.y + 10 : p1.y + 110;
+
+                projectiles.push({
+                    x: p1.x + (p1.direction === 1 ? p1.width - 70 : 30),
+                    y: spawnY,
+                    vx: p1.direction * 4.5,
+                    width: 20,
+                    height: 20,
+                    type: projType,
+                    owner: 'p1',
+                    heightType: heightType
+                });
             }
+            return;
+        }
 
-            const heightType = Math.random() < 0.5 ? 'high' : 'low';
-            const spawnY = heightType === 'high' ? p1.y + 10 : p1.y + 110;
+        if (document.getElementById("start-screen").classList.contains("active")) {
+            if (e.code === 'KeyA') {
+                insertCoin();
+            } else if (e.code === 'KeyS') {
+                startGame();
+            }
+            return;
+        }
 
-            projectiles.push({
-                x: p1.x + (p1.direction === 1 ? p1.width - 70 : 30),
-                y: spawnY,
-                vx: p1.direction * 4.5, // Ralentizado de 8
-                width: 40, // Agrandado de 25
-                height: 40, // Agrandado de 25
-                type: projType,
-                owner: 'p1',
-                heightType: heightType
-            });
+        if (document.getElementById("select-screen").classList.contains("active")) {
+            if (e.code === 'ArrowLeft') {
+                moveCursor(-1);
+            } else if (e.code === 'ArrowRight') {
+                moveCursor(1);
+            } else if (e.code === 'KeyA') {
+                confirmSelection();
+            } else if (e.code === 'KeyS') {
+                triggerFight();
+            }
+            return;
         }
     });
 
     window.addEventListener("keyup", (e) => {
         keys[e.code] = false;
     });
+
+    updateCreditsDisplay();
 });
