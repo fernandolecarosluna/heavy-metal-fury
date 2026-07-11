@@ -4,6 +4,7 @@ let audioCtx = null;
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        RetroMusic.init(audioCtx);
     }
 }
 
@@ -384,6 +385,8 @@ function startFight() {
     document.getElementById("vs-screen").classList.remove("active");
     document.getElementById("fight-screen").classList.add("active");
 
+    RetroMusic.startMusic('fight');
+
     // Iniciar temporizador
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
@@ -408,14 +411,18 @@ function endFight(winner, reason) {
     if (gameLoopId) cancelAnimationFrame(gameLoopId);
     
     playKoSound();
+    RetroMusic.stopMusic();
 
     let titleText = "";
     if (reason === "TIME OVER") {
         titleText = "TIME OVER!";
+        RetroMusic.startMusic('defeat');
     } else if (winner.isPlayer) {
         titleText = "YOU WIN!";
+        RetroMusic.startMusic('victory');
     } else {
         titleText = "YOU LOSE!";
+        RetroMusic.startMusic('defeat');
     }
 
     document.getElementById("result-title-text").textContent = titleText;
@@ -874,6 +881,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const creditsCount = document.getElementById("credits-count");
     const slots = document.querySelectorAll(".grid-slot");
     const fightPromptText = document.getElementById("fight-prompt-text");
+    const btnToggleMusic = document.getElementById("btn-toggle-music");
+
+    if (btnToggleMusic) {
+        btnToggleMusic.addEventListener("click", () => {
+            initAudio();
+            const muted = RetroMusic.toggleMute();
+            btnToggleMusic.textContent = muted ? "🔇" : "🔊";
+            btnToggleMusic.classList.toggle("muted", muted);
+        });
+    }
 
     const updateCreditsDisplay = () => {
         const text = `CREDITS: ${credits.toString().padStart(2, '0')}`;
@@ -893,6 +910,7 @@ document.addEventListener("DOMContentLoaded", () => {
         playCoinSound();
         credits++;
         updateCreditsDisplay();
+        RetroMusic.startMusic('menu');
     };
 
     const startGame = () => {
@@ -903,6 +921,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             document.getElementById("start-screen").classList.remove("active");
             document.getElementById("select-screen").classList.add("active");
+            RetroMusic.startMusic('select');
 
             selectionPhase = 'p1';
             selectedP1Id = null;
@@ -1028,6 +1047,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             document.getElementById("select-screen").classList.remove("active");
             document.getElementById("vs-screen").classList.add("active");
+            RetroMusic.stopMusic();
 
             setTimeout(() => {
                 startFight();
@@ -1059,6 +1079,7 @@ document.addEventListener("DOMContentLoaded", () => {
         playCoinSound();
         document.getElementById("result-screen").classList.remove("active");
         document.getElementById("select-screen").classList.add("active");
+        RetroMusic.startMusic('select');
 
         selectionPhase = 'p1';
         selectedP1Id = null;
@@ -1132,6 +1153,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     document.getElementById("result-screen").classList.remove("active");
                     document.getElementById("select-screen").classList.add("active");
+                    RetroMusic.startMusic('select');
 
                     selectionPhase = 'p1';
                     selectedP1Id = null;
